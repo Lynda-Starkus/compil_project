@@ -1,0 +1,758 @@
+/*******************************
+***** SECTION 1 - OPTIONS *****
+*******************************/
+
+
+options {
+  LOOKAHEAD=2;
+  FORCE_LA_CHECK = true;
+}
+
+PARSER_BEGIN(miniC)
+import java.util.*;
+import java.io.*;
+
+public class miniC {
+
+    private static Stack<pair> expStack = new Stack<pair>();
+    private static Stack<Object> ss = new Stack<Object>();
+    private static Stack<ScopeLevel> currentScope = new Stack<ScopeLevel>();
+    private static Hashtable<String, String> strings = new Hashtable<String, String>();
+    private static Hashtable<String, ArrayList<Code>> functions = new Hashtable<String, ArrayList<Code>>();
+    private static String FonctionCourante;
+    private static ArrayList<Code> Base;
+    private static int k;
+
+    
+    public static String setString(String string) {
+        String name = "STRING" + strings.size();
+
+        StringBuilder value = new StringBuilder( "'" + string.substring(1,string.length() - 1) + "$'");
+
+        int from = 0;
+        while(value.indexOf("\\n",from) != -1)
+        {
+            from = value.indexOf("\\n",from);
+            value.replace(from, from+"\\n".length(), "' , CR , LF , '");
+            from++;
+        }
+
+        from = 0;
+        while(value.indexOf("\\t",from) != -1)
+        {
+            from = value.indexOf("\\t",from);
+            value.replace(from, from+"\\t".length(), "' , TAB , '");
+            from++;
+        }
+
+        from = 0;
+        while(value.indexOf("'' ,",from) != -1)
+        {
+            from = value.indexOf("'' ,",from);
+            value.replace(from, from+"'' ,".length(), "");
+            from++;
+        }
+
+        strings.put(name , value.toString());
+
+        return name;
+    }
+
+    public static int getCurrentAddr() {
+        return Scope.getCurrentAddr();
+    }
+
+    public Hashtable<String, ArrayList<Code>> Fonctions() {
+        return functions;
+    }
+
+
+    private static void AppelFonction(String entree) throws ParseException {
+        if(!functions.containsKey(entree))
+        {
+            throw new ParseException("Unknown function '" + entree
+                + "'You have to define it first ! ");
+        }
+    }
+
+
+    private static void FonctionDefinition(String entree) throws ParseException {
+        if(functions.containsKey(entree))
+        {
+            throw new ParseException("Function '" + entree
+                        + "' already defined ! ");
+        }
+
+        FonctionCourante = entree;
+
+        Base = new ArrayList<Code>();
+        k = 0;
+        functions.put(entree,Base);
+    }
+
+    
+    public static ArrayList<Code> getPB() {
+        return Base;
+    }
+
+    public static Hashtable<String, String> getStrings() {
+        return strings;
+    }
+
+    private static String getAddr(Object s) {
+
+        if (s instanceof Integer) {
+            s = (Integer) s;
+
+            return ("RESERVE + " + s.toString());
+        }
+
+        return ((String) s).substring(1);
+    }
+
+    private static int Temp() {
+        int temp = currentScope.peek().getCurrentAddr();
+        currentScope.peek().setCurrentAddr(temp + 2);
+        return temp;
+    }
+
+    private static String getAddr(Object s, String first) {
+        String output = getAddr(s);
+        if (output.startsWith("RESERVE + ")) {
+            return first + output;
+        }
+        return output;
+    }
+
+    
+
+    private static void comparer(String entree) {
+        int jp3 = toInt(ss.pop());
+        int jp4 = toInt(ss.pop());
+        int jp10 = toInt(ss.pop());
+        int jp11;
+
+        switch (entree) {
+            case "==":
+                jp11 = toInt(ss.pop());
+                Base.set(jp11, new Code("mov", "BX", getAddr(ss.pop())));
+                Base.set(jp10, new Code("mov", "AX", getAddr(ss.pop())));
+                Base.set(jp4, new Code("cmp", "AX", "BX"));
+                Base.set(jp3, new Code("jne", "label" + FonctionCourante + (k), null));
+                break;
+            case "!=":
+                jp11 = toInt(ss.pop());
+                Base.set(jp11, new Code("mov", "BX", getAddr(ss.pop())));
+                Base.set(jp10, new Code("mov", "AX", getAddr(ss.pop())));
+                Base.set(jp4, new Code("cmp", "AX", "BX"));
+                Base.set(jp3, new Code("je", "label" + FonctionCourante + (k), null));
+                break;
+            case "<":
+                jp11 = toInt(ss.pop());
+                Base.set(jp11, new Code("mov", "BX", getAddr(ss.pop())));
+                Base.set(jp10, new Code("mov", "AX", getAddr(ss.pop())));
+                Base.set(jp4, new Code("cmp", "AX", "BX"));
+                Base.set(jp3, new Code("jge", "label" + FonctionCourante + (k), null));
+                break;
+            case ">":
+                jp11 = toInt(ss.pop());
+                Base.set(jp11, new Code("mov", "BX", getAddr(ss.pop())));
+                Base.set(jp10, new Code("mov", "AX", getAddr(ss.pop())));
+                Base.set(jp4, new Code("cmp", "AX", "BX"));
+                Base.set(jp3, new Code("jle", "label" + FonctionCourante + (k), null));
+                break;
+            case ">=":
+                jp11 = toInt(ss.pop());
+                Base.set(jp11, new Code("mov", "BX", getAddr(ss.pop())));
+                Base.set(jp10, new Code("mov", "AX", getAddr(ss.pop())));
+                Base.set(jp4, new Code("cmp", "AX", "BX"));
+                Base.set(jp3, new Code("jl", "label" + FonctionCourante + (k), null));
+                break;
+            case "<=":
+                jp11 = toInt(ss.pop());
+                Base.set(jp11, new Code("mov", "BX", getAddr(ss.pop())));
+                Base.set(jp10, new Code("mov", "AX", getAddr(ss.pop())));
+                Base.set(jp4, new Code("cmp", "AX", "BX"));
+                Base.set(jp3, new Code("jg", "label" + FonctionCourante + (k), null));
+                break;
+        }
+
+    }
+
+    public static int toInt(Object obj)
+    {
+        if(obj instanceof Number) {
+             return ((Number) obj).intValue();
+        }
+        String s = obj.toString();
+        char[] mysChars = s.toCharArray();
+        if(mysChars[0]=='#') {mysChars[0]='0';}
+        s = String.valueOf(mysChars);
+        return Integer.parseInt(s);
+    }
+
+    private static void GenererCode(String action, String entree, String type, String args ) throws ParseException{
+
+        switch (action) {
+
+            case "#createFunction":
+                FonctionDefinition(entree);
+                break;
+            case "#AppelFonction":
+                AppelFonction(entree);
+                Base.add(new Code("CALL", entree,null ));
+                k++;
+                break;
+            case "#startScopeLevel":
+                currentScope.push(new ScopeLevel());
+                break;
+            case "#endScopeLevel":
+                currentScope.pop();
+                break;
+            case "#scopeStart":
+                currentScope.peek().addScope();
+                break;
+            case "#scopeEnd":
+                currentScope.peek().deleteScope();
+                break;
+            case "#const":
+                ss.push("#" + entree);
+                break;
+            case "#variableDef":
+                int a = currentScope.peek().addVariable(entree);
+                ss.push(a);
+                break;
+            case "#pid":
+                int p = currentScope.peek().findVariable(entree);
+                ss.push(p);
+                break;
+            case "#add":
+                int t = Temp();
+
+                Base.add(new Code("mov", "CX", getAddr(ss.pop())));
+                k++;
+                Base.add(new Code("add", "CX", getAddr(ss.pop())));
+                k++;
+                Base.add(new Code("mov", getAddr(t), "CX"));
+                k++;
+
+                ss.push(t);
+                break;
+            case "#mines":
+                int t1 = Temp();
+                String str2 = getAddr(ss.pop());
+                Base.add(new Code("mov", "CX", getAddr(ss.pop())));
+                k++;
+                Base.add(new Code("sub", "CX", str2));
+                k++;
+                Base.add(new Code("mov", getAddr(t1), "CX"));
+                k++;
+                ss.push(t1);
+                break;
+            case "#mul":
+                int t2 = Temp();
+                Base.add(new Code("mov", "CX", getAddr(ss.pop())));
+                k++;
+                Base.add(new Code("mov", "AL", getAddr(ss.pop(), "BYTE PTR ")));
+                k++;
+                Base.add(new Code("mul", "CL", null));
+                k++;
+                Base.add(new Code("mov", getAddr(t2), "AX"));
+                k++;
+                ss.push(t2);
+                break;
+            case "#div":
+                int t3 = Temp();
+                String pa2 = getAddr(ss.pop(), "BYTE PTR ");
+                Base.add(new Code("mov", "AX", getAddr(ss.pop())));
+                k++;
+                Base.add(new Code("mov", "CL", pa2));
+                k++;
+                Base.add(new Code("div", "CL", null));
+                k++;
+                Base.add(new Code("mov", getAddr(t3, "BYTE PTR "), "AL"));
+                k++;
+                ss.push(t3);
+                break;
+            case "#assign":
+                Base.add(new Code("mov", "AX", getAddr(ss.pop())));
+                k++;
+                Base.add(new Code("mov", getAddr(ss.pop()), "AX"));
+                k++;
+                break;
+            case "#label":
+                Base.add(new Code("label" + FonctionCourante + k + ":", null, null));
+                ss.push(k);
+                k++;
+                break;
+            case "#save":
+                Base.add(new Code("save", null, null));
+                ss.push(k);
+                k++;
+                break;
+            case "#save_pointer":
+                Base.add(new Code("label" + FonctionCourante + k + ":", null, null));
+                ss.push(k);
+                k++;
+                break;
+            case "#while":
+                comparer(entree);
+
+                Base.add(new Code("jmp", "label" + FonctionCourante + ss.pop(), null));
+                Base.add(new Code("label" + FonctionCourante + k + ":", null, null));
+                k++;
+                k++;
+                break;
+            case "#until":
+                comparer(entree);
+
+                Base.add(new Code("jmp", "label" + FonctionCourante + ss.pop(), null));
+                Base.add(new Code("label" + FonctionCourante + k + ":", null, null));
+                k++;
+                k++;
+
+                break;
+            case "#jpf_save":
+                comparer(entree);
+
+                Base.add(new Code("save", null, null));
+                ss.push(k);
+
+                Base.add(new Code("label" + FonctionCourante + k + ":", null, null));
+                k++;
+                k++;
+                break;
+            case "#jp":
+                Base.set(toInt(ss.pop()), new Code("jmp", "label" + FonctionCourante + k, null));
+                break;
+            case "#jpf":
+                comparer(entree);
+
+                Base.add(new Code("label" + FonctionCourante + k + ":", null, null));
+                k++;
+                break;
+            case "#jp_statement":
+                Base.add(new Code("jmp", null, null));
+                ss.push(k);
+                k++;
+                break;
+            case "#for_jp_statement":
+                Base.add(new Code("label" + FonctionCourante + k + ":", null, null));
+                ss.push(k);
+                k++;
+                break;
+            case "#for":
+                int jp_statement = toInt(ss.pop());
+                int jp_condition = toInt(ss.pop());
+                int step_pointer = toInt(ss.pop());
+                int jp_after_condition = toInt(ss.pop());
+
+                if(!entree.equals("nothing"))
+                {
+                    comparer(entree);
+                }
+
+                int befor_condition = toInt(ss.pop());
+
+                Base.set(jp_condition, new Code("jmp", "label" + FonctionCourante + befor_condition, null));
+                Base.set(jp_after_condition, new Code("jmp", "label" + FonctionCourante + jp_statement, null));
+
+                Base.add(new Code("jmp", "label" + FonctionCourante + step_pointer, null));
+                Base.add(new Code("label" + FonctionCourante + k + ":", null, null));
+                k++;
+                k++;
+                break;
+            case "#print":
+                int pr = toInt(ss.pop());
+                Base.add(new Code("mov", "AH", "BYTE PTR " + getAddr(pr + 1)));
+                k++;
+                Base.add(new Code("mov", "AL", "BYTE PTR " + getAddr(pr)));
+                k++;
+                Base.add(new Code("CALL", "CONVERT_ASSCII", null));
+                k++;
+                Base.add(new Code("mov", "AH", "09H"));
+                k++;
+                Base.add(new Code("lea", "DX", "ASSCII_NUM"));
+                k++;
+                Base.add(new Code("int", "21H", null));
+                k++;
+                break;
+            case "#printString":
+                String name = setString(entree);
+
+                Base.add(new Code("mov", "AH", "09H"));
+                k++;
+                Base.add(new Code("lea", "DX", name));
+                k++;
+                Base.add(new Code("int", "21H", null));
+                k++;
+                break;
+            case "#pause":
+
+                Base.add(new Code("mov", "AH", "7H"));
+                k++;
+                Base.add(new Code("int", "21H", null));
+                k++;
+                break;
+            case "#cls":
+                Base.add(new Code("CALL", "CLRSCR", null));
+                k++;
+                break;
+            case "#end":
+                Base.add(new Code("label" + FonctionCourante + k + ": ", null, null));
+                k++;
+                int l = 0;
+                System.out.println("/////////////Generation du code intermediaire\\\\\\\\\\\\");
+                StringBuilder sb = new StringBuilder();
+                for (Code c : Base)
+                {
+                    sb.append(l+" :\t");
+                    sb.append(c.toString());
+                    sb.append("\n");
+                    l++;
+                }
+                System.out.println(sb);
+                System.out.println("_________________________________________________________");
+                break;
+            case "#inc":
+                Base.add(new Code("INC", getAddr(ss.pop()), null));
+                k++;
+                break;
+            case "#dec":
+                Base.add(new Code("DEC", getAddr(ss.pop()), null));
+                k++;
+                break;
+        }
+
+    }
+
+    
+
+    static int precedence(String opt)
+    {
+        switch(opt)
+        {
+            case "#add":
+            case "#mines":
+                return 1;
+            case "#div":
+            case "#mul":
+                return 2;
+            default:
+                return 0;
+        }
+    }
+
+    static void preStack(pair p) throws ParseException
+    {
+          String part1 = p.part1;
+          switch(part1)
+          {
+                case "#add":
+                case "#mines":
+                case "#div":
+                case "#mul":
+                    while(!expStack.isEmpty() && precedence(expStack.peek().part1) >= precedence(part1))
+                    {
+                        pair pa = expStack.pop();
+                        GenererCode(pa.part1,pa.part2, "", "");
+                    }
+                    expStack.push(p);
+                    break;
+                case "#OP":
+                    expStack.push(p);
+                    break;
+                case "#CP":
+                    while(!expStack.peek().part1.equals("#OP") )
+                    {
+                        pair pa = expStack.pop();
+                        GenererCode(pa.part1,pa.part2, "", "");
+                    }
+                    expStack.pop();
+                case "#finish":
+                    while(!expStack.isEmpty())
+                    {
+                        pair pa = expStack.pop();
+                        GenererCode(pa.part1,pa.part2, "", "");
+                    }
+                case "#pid":
+                case "#const":
+                    GenererCode(p.part1,p.part2, "", "");
+                    break;
+          }
+    }
+
+    static class pair
+    {
+        public static String part1 , part2;
+
+        public pair(String part1,String part2)
+        {
+            this.part1 = part1;
+            this.part2 = part2;
+        }
+
+    }
+
+
+/*********************************
+***** SECTION 2 - USER CODE *****
+*********************************/
+
+
+    public static void main(String args []) throws ParseException
+    {
+
+    miniC parser = new miniC(System.in);
+    while (true)
+    {
+      System.out.println("\n*******Bienvenu dans le compilateur de MINI-C*******");
+     
+      try
+      {
+        System.out.println("====Votre code en MINI-C====");
+        miniC.program();
+      }
+      catch (Exception e)
+      {
+        System.out.println("Syntaxic error detected ... ! ");
+        System.out.println(e.getMessage());
+        miniC.ReInit(System.in);
+      }
+      catch (Error e)
+      {
+        System.out.println("Error ... !");
+        System.out.println(e.getMessage());
+        break;
+      }
+    }
+  }
+}
+PARSER_END(miniC)
+
+
+/*****************************************
+***** SECTION 3 - TOKEN DEFINITIONS *****
+*****************************************/
+
+SKIP : { /*** Ignoring spaces/tabs/newlines ***/
+ " "
+|  "\t"
+|  "\n"
+|  "\r"
+|  <"//" (~["\n","\r"])* ("\n" | "\r" | "\r\n")>
+|  <"/*" (~["*"])* "*" ("*" | ~["*","/"] (~["*"])* "*")* "/">  /* COMMENTS */
+}
+
+TOKEN : {
+    <TYPE: <INT> | <FLOAT>  >            |
+    <IF:   "if"  >                      |
+    <ELSE:   "else"  >                      |
+    <#INT: "int" >                      |
+    <#FLOAT: "float" >                    |
+    <WHILE: "while" >                   |
+    <FOR: "for" >                                       
+}
+
+
+/* Numbers and identifiers */
+TOKEN: {
+    <IDENTIFIANT: <LETTRE> (<LETTRE> | <CHIFFRE> | <ZERO>)* >                  |
+    <NOMBRE: <CHIFFRE> (<CHIFFRE> | <ZERO>)* | <ZERO> >                          |
+    <#LETTRE: ["a"-"z","A"-"Z"] >                                   |
+    <#CHIFFRE: ["1"-"9"] >                                            |
+    <#ZERO: "0" >
+}
+
+/* Keywords and punctuation */
+TOKEN: {
+    <PAROUVR: "(" > |
+    <PARFERM: ")" > |
+    <VIRGULE:     "," > |
+    <ACCOUVR: "{" > |
+    <ACCFERM: "}" > |
+    <POINTVIRGULE: ";" > |
+    <AFFECT:    "=" > |
+    <EQ:       "==" > |
+    <LT:       "<"  > |
+    <LTE:      "<=" > |
+    <GT:       ">"  > |
+    <GTE:      ">=" > |
+    <NEQ:      "!=" > |
+    <ADD:       "+" > |
+    <SUB:       "-" > |
+    <MUL:       "*" > |
+    <DIV:       "/" >
+}
+
+
+//Grammar starts here
+
+void program() : {}
+{
+    (code())*
+    { GenererCode( "#startScopeLevel" , "", "", ""); }
+    <TYPE> "main" { GenererCode( "#createFunction" , "main", "", "" ); } <PAROUVR> <PARFERM>
+    		StatementBlockDef()
+    { GenererCode( "#end" , "", "", ""); }
+    { GenererCode( "#endScopeLevel" , "", "", ""); }
+    < EOF >
+}
+
+void code() : {}
+{
+    Function()
+}
+
+void ArgList() : {}
+{
+    Arg() (<VIRGULE> Arg())*
+}
+
+void Arg() : {}
+{
+    <TYPE> <IDENTIFIANT>
+}
+
+
+void Function() :
+{
+ Token id;
+}
+{
+    { GenererCode( "#startScopeLevel" , "", "", ""); }
+    <TYPE> id = <IDENTIFIANT> <PAROUVR> [ArgList()] <PARFERM> { GenererCode( "#createFunction", id.image, "", "" ); }
+
+       StatementBlockDef()
+
+     { GenererCode( "#end" , "", "", ""); }
+    { GenererCode( "#endScopeLevel" , "", "", ""); }
+}
+
+
+
+void varAssignDefInInit() : {}
+{
+    <AFFECT> Expr() {preStack(new pair( "#finish" , ""));}{ GenererCode( "#assign" , "", "", "" ); }
+}
+
+
+void varDefineDef() :
+{
+  Token type, id;
+}
+{
+     ((<TYPE> id = < IDENTIFIANT > { GenererCode( "#variableDef" , id.image, "", "" ); }) | ( id = < IDENTIFIANT > { GenererCode( "#pid" , id.image, "", "" ); }))
+      "=" ExprAffect() {preStack(new pair( "#finish" , "" ));}{ GenererCode( "#assign" , "", "", "" ); }
+}
+
+
+void StatementBlockDef() : {}
+{
+    <ACCOUVR> { GenererCode( "#scopeStart" , "", "", ""); } (Stmt())*  { GenererCode( "#scopeEnd" , "", "", ""); }  <ACCFERM>
+}
+void Stmt() : {}
+{
+    varDefineDef() <POINTVIRGULE>     |
+    Expr() <POINTVIRGULE>             |
+    IfStmt()                          |
+    ForStmt()                         |
+    appelFonction()                        |
+    WhileStmt()
+}
+
+void IfStmt() :
+{
+  Token op;
+}
+{
+    <IF> <PAROUVR> op = Rvalue() <PARFERM> StatementBlockDef()
+
+    (
+      ( ( <ELSE> { GenererCode( "#jpf_save" , op.image, "", "" ); }) ( (StatementBlockDef() | Stmt()) { GenererCode( "#jp" , "", "", "" ); })  )
+      | { GenererCode( "#jpf" , op.image, "", "" ); }
+    )
+
+}
+
+void Expr() : {}
+{
+    LOOKAHEAD(ExprAffect()) ExprAffect() |
+    Rvalue()
+}
+
+void ExprAffect() :
+{}
+{
+	(
+	  (
+	  ({ Token id1;} id1 = < IDENTIFIANT > { preStack(new pair( "#pid" , id1.image )); }| { Token id3;} id3 = < NOMBRE>  { preStack(new pair( "#const" , id3.image )); } )
+
+		({String op;}
+			(
+			  "+" { preStack(new pair( "#add" , "" ));}
+			| "-" { preStack(new pair( "#mines" , "" ));}
+			| "*" { preStack(new pair( "#mul" , "" ));}
+			| "/" { preStack(new pair( "#div" , "" ));}
+		)ExprAffect())?
+	) | ( "(" {preStack(new pair( "#OP" , "" ));} ExprAffect() ")" {preStack(new pair( "#CP" , "" ));} ))
+     /* <IDENTIFIANT> <AFFECT> Expr() */
+}
+
+
+Token Rvalue() :
+{
+ Token op = null;
+}
+{
+  	ExprAffect() {preStack(new pair( "#finish" , "" ));} ( op = "<" | op = ">" | op = "==" | op = "!=" | op = " >=" | op = "<="  ) ExprAffect() {preStack(new pair( "#finish" , "" ));} { GenererCode( "#save" , "", "", "" );GenererCode( "#save" , "", "", "" );GenererCode( "#save" , "", "", "" );GenererCode( "#save" , "", "", "" ); }
+	{return op;}
+
+}
+
+void appelFonction() :
+{
+ Token id;
+}
+{
+    id = <IDENTIFIANT> <PAROUVR> [IdentList() ] <PARFERM> { GenererCode( "#AppelFonction", id.image , "", "" ); } <POINTVIRGULE>
+}
+
+void IdentList() : {}
+{
+    FuncExpr()  (<VIRGULE> FuncExpr())*
+}
+
+void FuncExpr() : {}
+{
+    Expr()
+}
+
+void WhileStmt() :
+{
+ Token op;
+}
+{
+    <WHILE> <PAROUVR> { GenererCode( "#save_pointer" , "", "", "" ); } op = Rvalue() <PARFERM> (StatementBlockDef() | Stmt()) { GenererCode( "#while" , op.image, "", "" ); }
+}
+
+void ForStmt() :
+{
+ Token op = null;
+}
+{
+	<FOR> <PAROUVR> (varDefineDef())? ";" { GenererCode( "#save_pointer" , "", "", "" ); } ( op = Rvalue())?  { GenererCode( "#save" , "", "", "" ); }  <POINTVIRGULE> { GenererCode( "#save_pointer" , "", "", "" ); } (( { Token id;} id = < IDENTIFIANT > { GenererCode( "#pid" , id.image, "", "" ); } <AFFECT> ExprAffect(){preStack(new pair( "#finish" , "" ));} { GenererCode( "#assign" , "", "", "" ); }) | DeclarationIn())? { GenererCode( "#save" , "", "", "" ); }
+	<PARFERM>
+		{ GenererCode( "#for_jp_statement" , "", "", "" ); }
+	      StatementBlockDef()
+	    { if(op != null)GenererCode( "#for" , op.image, "", "" );else GenererCode( "#for" , "nothing", "", "" );}
+}
+
+
+void DeclarationIn() :
+{
+ Token id;
+}
+{
+    id = < IDENTIFIANT > { GenererCode( "#pid" , id.image, "", "" ); } ("++" { GenererCode( "#inc" , "", "", "");} | "--" { GenererCode( "#dec" , "", "", "");} )
+}
