@@ -1,8 +1,8 @@
-public class Code {
+public class Source {
 
     private String part1 ,part2, part3;
 
-    public Code(Object part1, Object part2, Object part3) {
+    public Source(Object part1, Object part2, Object part3) {
         super();
 
         if(part1 != null){

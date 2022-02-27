@@ -1,25 +1,25 @@
 import java.util.Stack;
 
-public class ScopeLevel {
-    private Stack<Scope> currentScope = new Stack<Scope>();
+public class UtilityGen {
+    private Stack<Utility> currentScope = new Stack<Utility>();
 
-    public ScopeLevel() {
+    public UtilityGen() {
     }
 
     public static int getCurrentAddr(){
-        return Scope.getCurrentAddr();
+        return Utility.getCurrentAddr();
     }
 
     public static void setCurrentAddr(int currentAddr){
-        Scope.setCurrentAddr(currentAddr);
+        Utility.setCurrentAddr(currentAddr);
     }
 
     public void addScope() {
-        Scope s = null;
+        Utility s = null;
         if(currentScope.isEmpty()){
-            s =  new Scope(null);
+            s =  new Utility(null);
         }else{
-            s =  new Scope(currentScope.peek());
+            s =  new Utility(currentScope.peek());
         }
         currentScope.add(s);
     }

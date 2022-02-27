@@ -16,11 +16,11 @@ public class miniC {
 
     private static Stack<pair> expStack = new Stack<pair>();
     private static Stack<Object> ss = new Stack<Object>();
-    private static Stack<ScopeLevel> currentScope = new Stack<ScopeLevel>();
+    private static Stack<UtilityGen> currentScope = new Stack<UtilityGen>();
     private static Hashtable<String, String> strings = new Hashtable<String, String>();
-    private static Hashtable<String, ArrayList<Code>> functions = new Hashtable<String, ArrayList<Code>>();
+    private static Hashtable<String, ArrayList<Source>> functions = new Hashtable<String, ArrayList<Source>>();
     private static String FonctionCourante;
-    private static ArrayList<Code> Base;
+    private static ArrayList<Source> Base;
     private static int k;
 
     
@@ -59,10 +59,10 @@ public class miniC {
     }
 
     public static int getCurrentAddr() {
-        return Scope.getCurrentAddr();
+        return Utility.getCurrentAddr();
     }
 
-    public Hashtable<String, ArrayList<Code>> Fonctions() {
+    public Hashtable<String, ArrayList<Source>> Fonctions() {
         return functions;
     }
 
@@ -85,13 +85,13 @@ public class miniC {
 
         FonctionCourante = entree;
 
-        Base = new ArrayList<Code>();
+        Base = new ArrayList<Source>();
         k = 0;
         functions.put(entree,Base);
     }
 
     
-    public static ArrayList<Code> getPB() {
+    public static ArrayList<Source> getPB() {
         return Base;
     }
 
@@ -135,45 +135,45 @@ public class miniC {
         switch (entree) {
             case "==":
                 jp11 = toInt(ss.pop());
-                Base.set(jp11, new Code("mov", "BX", getAddr(ss.pop())));
-                Base.set(jp10, new Code("mov", "AX", getAddr(ss.pop())));
-                Base.set(jp4, new Code("cmp", "AX", "BX"));
-                Base.set(jp3, new Code("jne", "label" + FonctionCourante + (k), null));
+                Base.set(jp11, new Source("mov", "BX", getAddr(ss.pop())));
+                Base.set(jp10, new Source("mov", "AX", getAddr(ss.pop())));
+                Base.set(jp4, new Source("cmp", "AX", "BX"));
+                Base.set(jp3, new Source("jne", "label" + FonctionCourante + (k), null));
                 break;
             case "!=":
                 jp11 = toInt(ss.pop());
-                Base.set(jp11, new Code("mov", "BX", getAddr(ss.pop())));
-                Base.set(jp10, new Code("mov", "AX", getAddr(ss.pop())));
-                Base.set(jp4, new Code("cmp", "AX", "BX"));
-                Base.set(jp3, new Code("je", "label" + FonctionCourante + (k), null));
+                Base.set(jp11, new Source("mov", "BX", getAddr(ss.pop())));
+                Base.set(jp10, new Source("mov", "AX", getAddr(ss.pop())));
+                Base.set(jp4, new Source("cmp", "AX", "BX"));
+                Base.set(jp3, new Source("je", "label" + FonctionCourante + (k), null));
                 break;
             case "<":
                 jp11 = toInt(ss.pop());
-                Base.set(jp11, new Code("mov", "BX", getAddr(ss.pop())));
-                Base.set(jp10, new Code("mov", "AX", getAddr(ss.pop())));
-                Base.set(jp4, new Code("cmp", "AX", "BX"));
-                Base.set(jp3, new Code("jge", "label" + FonctionCourante + (k), null));
+                Base.set(jp11, new Source("mov", "BX", getAddr(ss.pop())));
+                Base.set(jp10, new Source("mov", "AX", getAddr(ss.pop())));
+                Base.set(jp4, new Source("cmp", "AX", "BX"));
+                Base.set(jp3, new Source("jge", "label" + FonctionCourante + (k), null));
                 break;
             case ">":
                 jp11 = toInt(ss.pop());
-                Base.set(jp11, new Code("mov", "BX", getAddr(ss.pop())));
-                Base.set(jp10, new Code("mov", "AX", getAddr(ss.pop())));
-                Base.set(jp4, new Code("cmp", "AX", "BX"));
-                Base.set(jp3, new Code("jle", "label" + FonctionCourante + (k), null));
+                Base.set(jp11, new Source("mov", "BX", getAddr(ss.pop())));
+                Base.set(jp10, new Source("mov", "AX", getAddr(ss.pop())));
+                Base.set(jp4, new Source("cmp", "AX", "BX"));
+                Base.set(jp3, new Source("jle", "label" + FonctionCourante + (k), null));
                 break;
             case ">=":
                 jp11 = toInt(ss.pop());
-                Base.set(jp11, new Code("mov", "BX", getAddr(ss.pop())));
-                Base.set(jp10, new Code("mov", "AX", getAddr(ss.pop())));
-                Base.set(jp4, new Code("cmp", "AX", "BX"));
-                Base.set(jp3, new Code("jl", "label" + FonctionCourante + (k), null));
+                Base.set(jp11, new Source("mov", "BX", getAddr(ss.pop())));
+                Base.set(jp10, new Source("mov", "AX", getAddr(ss.pop())));
+                Base.set(jp4, new Source("cmp", "AX", "BX"));
+                Base.set(jp3, new Source("jl", "label" + FonctionCourante + (k), null));
                 break;
             case "<=":
                 jp11 = toInt(ss.pop());
-                Base.set(jp11, new Code("mov", "BX", getAddr(ss.pop())));
-                Base.set(jp10, new Code("mov", "AX", getAddr(ss.pop())));
-                Base.set(jp4, new Code("cmp", "AX", "BX"));
-                Base.set(jp3, new Code("jg", "label" + FonctionCourante + (k), null));
+                Base.set(jp11, new Source("mov", "BX", getAddr(ss.pop())));
+                Base.set(jp10, new Source("mov", "AX", getAddr(ss.pop())));
+                Base.set(jp4, new Source("cmp", "AX", "BX"));
+                Base.set(jp3, new Source("jg", "label" + FonctionCourante + (k), null));
                 break;
         }
 
@@ -200,11 +200,11 @@ public class miniC {
                 break;
             case "#AppelFonction":
                 AppelFonction(entree);
-                Base.add(new Code("CALL", entree,null ));
+                Base.add(new Source("CALL", entree,null ));
                 k++;
                 break;
             case "#startScopeLevel":
-                currentScope.push(new ScopeLevel());
+                currentScope.push(new UtilityGen());
                 break;
             case "#endScopeLevel":
                 currentScope.pop();
@@ -229,11 +229,11 @@ public class miniC {
             case "#add":
                 int t = Temp();
 
-                Base.add(new Code("mov", "CX", getAddr(ss.pop())));
+                Base.add(new Source("mov", "CX", getAddr(ss.pop())));
                 k++;
-                Base.add(new Code("add", "CX", getAddr(ss.pop())));
+                Base.add(new Source("add", "CX", getAddr(ss.pop())));
                 k++;
-                Base.add(new Code("mov", getAddr(t), "CX"));
+                Base.add(new Source("mov", getAddr(t), "CX"));
                 k++;
 
                 ss.push(t);
@@ -241,73 +241,73 @@ public class miniC {
             case "#mines":
                 int t1 = Temp();
                 String str2 = getAddr(ss.pop());
-                Base.add(new Code("mov", "CX", getAddr(ss.pop())));
+                Base.add(new Source("mov", "CX", getAddr(ss.pop())));
                 k++;
-                Base.add(new Code("sub", "CX", str2));
+                Base.add(new Source("sub", "CX", str2));
                 k++;
-                Base.add(new Code("mov", getAddr(t1), "CX"));
+                Base.add(new Source("mov", getAddr(t1), "CX"));
                 k++;
                 ss.push(t1);
                 break;
             case "#mul":
                 int t2 = Temp();
-                Base.add(new Code("mov", "CX", getAddr(ss.pop())));
+                Base.add(new Source("mov", "CX", getAddr(ss.pop())));
                 k++;
-                Base.add(new Code("mov", "AL", getAddr(ss.pop(), "BYTE PTR ")));
+                Base.add(new Source("mov", "AL", getAddr(ss.pop(), "BYTE PTR ")));
                 k++;
-                Base.add(new Code("mul", "CL", null));
+                Base.add(new Source("mul", "CL", null));
                 k++;
-                Base.add(new Code("mov", getAddr(t2), "AX"));
+                Base.add(new Source("mov", getAddr(t2), "AX"));
                 k++;
                 ss.push(t2);
                 break;
             case "#div":
                 int t3 = Temp();
                 String pa2 = getAddr(ss.pop(), "BYTE PTR ");
-                Base.add(new Code("mov", "AX", getAddr(ss.pop())));
+                Base.add(new Source("mov", "AX", getAddr(ss.pop())));
                 k++;
-                Base.add(new Code("mov", "CL", pa2));
+                Base.add(new Source("mov", "CL", pa2));
                 k++;
-                Base.add(new Code("div", "CL", null));
+                Base.add(new Source("div", "CL", null));
                 k++;
-                Base.add(new Code("mov", getAddr(t3, "BYTE PTR "), "AL"));
+                Base.add(new Source("mov", getAddr(t3, "BYTE PTR "), "AL"));
                 k++;
                 ss.push(t3);
                 break;
             case "#assign":
-                Base.add(new Code("mov", "AX", getAddr(ss.pop())));
+                Base.add(new Source("mov", "AX", getAddr(ss.pop())));
                 k++;
-                Base.add(new Code("mov", getAddr(ss.pop()), "AX"));
+                Base.add(new Source("mov", getAddr(ss.pop()), "AX"));
                 k++;
                 break;
             case "#label":
-                Base.add(new Code("label" + FonctionCourante + k + ":", null, null));
+                Base.add(new Source("label" + FonctionCourante + k + ":", null, null));
                 ss.push(k);
                 k++;
                 break;
             case "#save":
-                Base.add(new Code("save", null, null));
+                Base.add(new Source("save", null, null));
                 ss.push(k);
                 k++;
                 break;
             case "#save_pointer":
-                Base.add(new Code("label" + FonctionCourante + k + ":", null, null));
+                Base.add(new Source("label" + FonctionCourante + k + ":", null, null));
                 ss.push(k);
                 k++;
                 break;
             case "#while":
                 comparer(entree);
 
-                Base.add(new Code("jmp", "label" + FonctionCourante + ss.pop(), null));
-                Base.add(new Code("label" + FonctionCourante + k + ":", null, null));
+                Base.add(new Source("jmp", "label" + FonctionCourante + ss.pop(), null));
+                Base.add(new Source("label" + FonctionCourante + k + ":", null, null));
                 k++;
                 k++;
                 break;
             case "#until":
                 comparer(entree);
 
-                Base.add(new Code("jmp", "label" + FonctionCourante + ss.pop(), null));
-                Base.add(new Code("label" + FonctionCourante + k + ":", null, null));
+                Base.add(new Source("jmp", "label" + FonctionCourante + ss.pop(), null));
+                Base.add(new Source("label" + FonctionCourante + k + ":", null, null));
                 k++;
                 k++;
 
@@ -315,29 +315,29 @@ public class miniC {
             case "#jpf_save":
                 comparer(entree);
 
-                Base.add(new Code("save", null, null));
+                Base.add(new Source("save", null, null));
                 ss.push(k);
 
-                Base.add(new Code("label" + FonctionCourante + k + ":", null, null));
+                Base.add(new Source("label" + FonctionCourante + k + ":", null, null));
                 k++;
                 k++;
                 break;
             case "#jp":
-                Base.set(toInt(ss.pop()), new Code("jmp", "label" + FonctionCourante + k, null));
+                Base.set(toInt(ss.pop()), new Source("jmp", "label" + FonctionCourante + k, null));
                 break;
             case "#jpf":
                 comparer(entree);
 
-                Base.add(new Code("label" + FonctionCourante + k + ":", null, null));
+                Base.add(new Source("label" + FonctionCourante + k + ":", null, null));
                 k++;
                 break;
             case "#jp_statement":
-                Base.add(new Code("jmp", null, null));
+                Base.add(new Source("jmp", null, null));
                 ss.push(k);
                 k++;
                 break;
             case "#for_jp_statement":
-                Base.add(new Code("label" + FonctionCourante + k + ":", null, null));
+                Base.add(new Source("label" + FonctionCourante + k + ":", null, null));
                 ss.push(k);
                 k++;
                 break;
@@ -354,57 +354,57 @@ public class miniC {
 
                 int befor_condition = toInt(ss.pop());
 
-                Base.set(jp_condition, new Code("jmp", "label" + FonctionCourante + befor_condition, null));
-                Base.set(jp_after_condition, new Code("jmp", "label" + FonctionCourante + jp_statement, null));
+                Base.set(jp_condition, new Source("jmp", "label" + FonctionCourante + befor_condition, null));
+                Base.set(jp_after_condition, new Source("jmp", "label" + FonctionCourante + jp_statement, null));
 
-                Base.add(new Code("jmp", "label" + FonctionCourante + step_pointer, null));
-                Base.add(new Code("label" + FonctionCourante + k + ":", null, null));
+                Base.add(new Source("jmp", "label" + FonctionCourante + step_pointer, null));
+                Base.add(new Source("label" + FonctionCourante + k + ":", null, null));
                 k++;
                 k++;
                 break;
             case "#print":
                 int pr = toInt(ss.pop());
-                Base.add(new Code("mov", "AH", "BYTE PTR " + getAddr(pr + 1)));
+                Base.add(new Source("mov", "AH", "BYTE PTR " + getAddr(pr + 1)));
                 k++;
-                Base.add(new Code("mov", "AL", "BYTE PTR " + getAddr(pr)));
+                Base.add(new Source("mov", "AL", "BYTE PTR " + getAddr(pr)));
                 k++;
-                Base.add(new Code("CALL", "CONVERT_ASSCII", null));
+                Base.add(new Source("CALL", "CONVERT_ASSCII", null));
                 k++;
-                Base.add(new Code("mov", "AH", "09H"));
+                Base.add(new Source("mov", "AH", "09H"));
                 k++;
-                Base.add(new Code("lea", "DX", "ASSCII_NUM"));
+                Base.add(new Source("lea", "DX", "ASSCII_NUM"));
                 k++;
-                Base.add(new Code("int", "21H", null));
+                Base.add(new Source("int", "21H", null));
                 k++;
                 break;
             case "#printString":
                 String name = setString(entree);
 
-                Base.add(new Code("mov", "AH", "09H"));
+                Base.add(new Source("mov", "AH", "09H"));
                 k++;
-                Base.add(new Code("lea", "DX", name));
+                Base.add(new Source("lea", "DX", name));
                 k++;
-                Base.add(new Code("int", "21H", null));
+                Base.add(new Source("int", "21H", null));
                 k++;
                 break;
             case "#pause":
 
-                Base.add(new Code("mov", "AH", "7H"));
+                Base.add(new Source("mov", "AH", "7H"));
                 k++;
-                Base.add(new Code("int", "21H", null));
+                Base.add(new Source("int", "21H", null));
                 k++;
                 break;
             case "#cls":
-                Base.add(new Code("CALL", "CLRSCR", null));
+                Base.add(new Source("CALL", "CLRSCR", null));
                 k++;
                 break;
             case "#end":
-                Base.add(new Code("label" + FonctionCourante + k + ": ", null, null));
+                Base.add(new Source("label" + FonctionCourante + k + ": ", null, null));
                 k++;
                 int l = 0;
                 System.out.println("/////////////Generation du code intermediaire\\\\\\\\\\\\");
                 StringBuilder sb = new StringBuilder();
-                for (Code c : Base)
+                for (Source c : Base)
                 {
                     sb.append(l+" :\t");
                     sb.append(c.toString());
@@ -415,11 +415,11 @@ public class miniC {
                 System.out.println("_________________________________________________________");
                 break;
             case "#inc":
-                Base.add(new Code("INC", getAddr(ss.pop()), null));
+                Base.add(new Source("INC", getAddr(ss.pop()), null));
                 k++;
                 break;
             case "#dec":
-                Base.add(new Code("DEC", getAddr(ss.pop()), null));
+                Base.add(new Source("DEC", getAddr(ss.pop()), null));
                 k++;
                 break;
         }
@@ -593,7 +593,7 @@ void program() : {}
     (code())*
     { GenererCode( "#startScopeLevel" , "", "", ""); }
     <TYPE> "main" { GenererCode( "#createFunction" , "main", "", "" ); } <PAROUVR> <PARFERM>
-    		StatementBlockDef()
+    		coreFonc()
     { GenererCode( "#end" , "", "", ""); }
     { GenererCode( "#endScopeLevel" , "", "", ""); }
     < EOF >
@@ -623,7 +623,7 @@ void Function() :
     { GenererCode( "#startScopeLevel" , "", "", ""); }
     <TYPE> id = <IDENTIFIANT> <PAROUVR> [ArgList()] <PARFERM> { GenererCode( "#createFunction", id.image, "", "" ); }
 
-       StatementBlockDef()
+       coreFonc()
 
      { GenererCode( "#end" , "", "", ""); }
     { GenererCode( "#endScopeLevel" , "", "", ""); }
@@ -637,7 +637,7 @@ void varAssignDefInInit() : {}
 }
 
 
-void varDefineDef() :
+void varDeclarer() :
 {
   Token type, id;
 }
@@ -647,13 +647,13 @@ void varDefineDef() :
 }
 
 
-void StatementBlockDef() : {}
+void coreFonc() : {}
 {
     <ACCOUVR> { GenererCode( "#scopeStart" , "", "", ""); } (Stmt())*  { GenererCode( "#scopeEnd" , "", "", ""); }  <ACCFERM>
 }
 void Stmt() : {}
 {
-    varDefineDef() <POINTVIRGULE>     |
+    varDeclarer() <POINTVIRGULE>     |
     Expr() <POINTVIRGULE>             |
     IfStmt()                          |
     ForStmt()                         |
@@ -666,10 +666,10 @@ void IfStmt() :
   Token op;
 }
 {
-    <IF> <PAROUVR> op = Rvalue() <PARFERM> StatementBlockDef()
+    <IF> <PAROUVR> op = Rvalue() <PARFERM> coreFonc()
 
     (
-      ( ( <ELSE> { GenererCode( "#jpf_save" , op.image, "", "" ); }) ( (StatementBlockDef() | Stmt()) { GenererCode( "#jp" , "", "", "" ); })  )
+      ( ( <ELSE> { GenererCode( "#jpf_save" , op.image, "", "" ); }) ( (coreFonc() | Stmt()) { GenererCode( "#jp" , "", "", "" ); })  )
       | { GenererCode( "#jpf" , op.image, "", "" ); }
     )
 
@@ -733,7 +733,7 @@ void WhileStmt() :
  Token op;
 }
 {
-    <WHILE> <PAROUVR> { GenererCode( "#save_pointer" , "", "", "" ); } op = Rvalue() <PARFERM> (StatementBlockDef() | Stmt()) { GenererCode( "#while" , op.image, "", "" ); }
+    <WHILE> <PAROUVR> { GenererCode( "#save_pointer" , "", "", "" ); } op = Rvalue() <PARFERM> (coreFonc() | Stmt()) { GenererCode( "#while" , op.image, "", "" ); }
 }
 
 void ForStmt() :
@@ -741,10 +741,10 @@ void ForStmt() :
  Token op = null;
 }
 {
-	<FOR> <PAROUVR> (varDefineDef())? ";" { GenererCode( "#save_pointer" , "", "", "" ); } ( op = Rvalue())?  { GenererCode( "#save" , "", "", "" ); }  <POINTVIRGULE> { GenererCode( "#save_pointer" , "", "", "" ); } (( { Token id;} id = < IDENTIFIANT > { GenererCode( "#pid" , id.image, "", "" ); } <AFFECT> ExprAffect(){preStack(new pair( "#finish" , "" ));} { GenererCode( "#assign" , "", "", "" ); }) | DeclarationIn())? { GenererCode( "#save" , "", "", "" ); }
+	<FOR> <PAROUVR> (varDeclarer())? ";" { GenererCode( "#save_pointer" , "", "", "" ); } ( op = Rvalue())?  { GenererCode( "#save" , "", "", "" ); }  <POINTVIRGULE> { GenererCode( "#save_pointer" , "", "", "" ); } (( { Token id;} id = < IDENTIFIANT > { GenererCode( "#pid" , id.image, "", "" ); } <AFFECT> ExprAffect(){preStack(new pair( "#finish" , "" ));} { GenererCode( "#assign" , "", "", "" ); }) | DeclarationIn())? { GenererCode( "#save" , "", "", "" ); }
 	<PARFERM>
 		{ GenererCode( "#for_jp_statement" , "", "", "" ); }
-	      StatementBlockDef()
+	      coreFonc()
 	    { if(op != null)GenererCode( "#for" , op.image, "", "" );else GenererCode( "#for" , "nothing", "", "" );}
 }
 

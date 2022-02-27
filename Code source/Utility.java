@@ -1,22 +1,22 @@
 import java.util.Hashtable;
 
-public class Scope {
+public class Utility {
 
     private static int currentAddr;
-    private Scope parent;
+    private Utility parent;
     private Hashtable<String, Integer> vars = new Hashtable<String, Integer>();
 
     static {
         currentAddr = 0;
     }
 
-    public Scope(Scope parent) {
+    public Utility(Utility parent) {
         this.parent = parent;
     }
 
     public int findAddr(String input) throws ParseException {
 
-        Scope t = this;
+        Utility t = this;
         while (t != null) {
             if (t.getVars().containsKey(input)) {
                 return t.getVars().get(input);
@@ -30,7 +30,7 @@ public class Scope {
 
     public int makeAddr(String input) throws ParseException {
 
-        Scope t = this;
+        Utility t = this;
         while (t != null) {
             if (t.getVars().containsKey(input)) {
                 throw new ParseException("Variable '" + input
@@ -53,14 +53,14 @@ public class Scope {
     }
 
     public static void setCurrentAddr(int currentAddr) {
-        Scope.currentAddr = currentAddr;
+        Utility.currentAddr = currentAddr;
     }
 
-    public Scope getParent() {
+    public Utility getParent() {
         return parent;
     }
 
-    public void setParent(Scope parent) {
+    public void setParent(Utility parent) {
         this.parent = parent;
     }
 
